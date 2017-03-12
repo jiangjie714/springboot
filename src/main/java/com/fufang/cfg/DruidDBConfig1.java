@@ -19,6 +19,14 @@ import com.alibaba.druid.pool.DruidDataSource;
 
 import ch.qos.logback.classic.Logger;
 
+/**
+ * 每多一个数据源就要多加一个配置文件
+ * 貌似很呆的样子。。。后续看能不能做到比较方便的。
+ * 该 多数据源配置 方式参考来源与阿里云社区的代码
+ * @author jie
+ *
+ */
+
 @Configuration  															
 @MapperScan(basePackages = DruidDBConfig1.PACKAGE, sqlSessionFactoryRef = "acSessionFactory1")
 public class DruidDBConfig1 {  
