@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.bi.mapper.MyRewardMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.bi.entity.MyReward" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="pharmacyId" property="pharmacyid" jdbcType="INTEGER" />
+    <result column="taskId" property="taskid" jdbcType="INTEGER" />
+    <result column="rewardId" property="rewardid" jdbcType="INTEGER" />
+    <result column="amount" property="amount" jdbcType="DECIMAL" />
+    <result column="expireTime" property="expiretime" jdbcType="DATE" />
+    <result column="createDate" property="createdate" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, pharmacyId, taskId, rewardId, amount, expireTime, createDate
+  </sql>
+  <select id="selectAll" resultMap="BaseResultMap" >
+   select  <include refid="Base_Column_List" />  from myreward
+  </select>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from myreward
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from myreward
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.fufang.bi.entity.MyReward" >
+    insert into myreward (id, pharmacyId, taskId, 
+      rewardId, amount, expireTime, 
+      createDate)
+    values (#{id,jdbcType=INTEGER}, #{pharmacyid,jdbcType=INTEGER}, #{taskid,jdbcType=INTEGER}, 
+      #{rewardid,jdbcType=INTEGER}, #{amount,jdbcType=DECIMAL}, #{expiretime,jdbcType=DATE}, 
+      #{createdate,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.fufang.bi.entity.MyReward" >
+    insert into myreward
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="pharmacyid != null" >
+        pharmacyId,
+      </if>
+      <if test="taskid != null" >
+        taskId,
+      </if>
+      <if test="rewardid != null" >
+        rewardId,
+      </if>
+      <if test="amount != null" >
+        amount,
+      </if>
+      <if test="expiretime != null" >
+        expireTime,
+      </if>
+      <if test="createdate != null" >
+        createDate,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="pharmacyid != null" >
+        #{pharmacyid,jdbcType=INTEGER},
+      </if>
+      <if test="taskid != null" >
+        #{taskid,jdbcType=INTEGER},
+      </if>
+      <if test="rewardid != null" >
+        #{rewardid,jdbcType=INTEGER},
+      </if>
+      <if test="amount != null" >
+        #{amount,jdbcType=DECIMAL},
+      </if>
+      <if test="expiretime != null" >
+        #{expiretime,jdbcType=DATE},
+      </if>
+      <if test="createdate != null" >
+        #{createdate,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.fufang.bi.entity.MyReward" >
+    update myreward
+    <set >
+      <if test="pharmacyid != null" >
+        pharmacyId = #{pharmacyid,jdbcType=INTEGER},
+      </if>
+      <if test="taskid != null" >
+        taskId = #{taskid,jdbcType=INTEGER},
+      </if>
+      <if test="rewardid != null" >
+        rewardId = #{rewardid,jdbcType=INTEGER},
+      </if>
+      <if test="amount != null" >
+        amount = #{amount,jdbcType=DECIMAL},
+      </if>
+      <if test="expiretime != null" >
+        expireTime = #{expiretime,jdbcType=DATE},
+      </if>
+      <if test="createdate != null" >
+        createDate = #{createdate,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.fufang.bi.entity.MyReward" >
+    update myreward
+    set pharmacyId = #{pharmacyid,jdbcType=INTEGER},
+      taskId = #{taskid,jdbcType=INTEGER},
+      rewardId = #{rewardid,jdbcType=INTEGER},
+      amount = #{amount,jdbcType=DECIMAL},
+      expireTime = #{expiretime,jdbcType=DATE},
+      createDate = #{createdate,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

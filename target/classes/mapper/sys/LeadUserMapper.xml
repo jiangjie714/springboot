@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.sys.mapper.LeadUserMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.LeadUser" >
+    <result column="leaderName" property="leadername" jdbcType="NVARCHAR" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+  </resultMap>
+  <insert id="insert" parameterType="com.fufang.ds.bi.entity.LeadUser" >
+    insert into dbo.oa_lead_user (leaderName, name)
+    values (#{leadername,jdbcType=NVARCHAR}, #{name,jdbcType=NVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.fufang.ds.bi.entity.LeadUser" >
+    insert into dbo.oa_lead_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="leadername != null" >
+        leaderName,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="leadername != null" >
+        #{leadername,jdbcType=NVARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  
+  <insert id="addLeaderUser" parameterType="java.util.Map" >
+   insert into dbo.oa_lead_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="leadername != null" >
+        leaderName,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="leadername != null" >
+        #{leadername,jdbcType=NVARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  
+  <insert id="addLeaderBatch"   parameterType="java.util.List"  >
+    insert into dbo.oa_lead_user (leadername,name) values
+   <foreach collection="list" item="item" index="index" separator=",">
+    (
+    #{item.manager,jdbcType=VARCHAR}, 
+    #{item.name,jdbcType=VARCHAR}
+    )
+   </foreach>
+  </insert>
+  
+  <select id="findLeaderUserBDUp" parameterType="java.lang.String" >
+  	select leaderName,name  from   dbo.oa_lead_user where name =#{manager,jdbcType=NVARCHAR }
+   </select>
+  
+  <delete id="deleteLeaderUserAll">
+  delete  from  dbo.oa_lead_user 
+  </delete>
+</mapper>

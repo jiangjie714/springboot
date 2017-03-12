@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.bd.mapper.BaseSalesMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.BaseSales" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="implementor" property="implementor" jdbcType="VARCHAR" />
+    <result column="pid" property="pid" jdbcType="INTEGER" />
+    <result column="salesAmount" property="salesamount" jdbcType="DOUBLE" />
+    <result column="salesCount" property="salescount" jdbcType="INTEGER" />
+    <result column="skuCount" property="skucount" jdbcType="INTEGER" />
+    <result column="price" property="price" jdbcType="DOUBLE" />
+    <result column="loginCount" property="logincount" jdbcType="INTEGER" />
+    <result column="uploadCount" property="uploadcount" jdbcType="INTEGER" />
+    <result column="daytime" property="daytime" jdbcType="VARCHAR" />
+    <result column="avgpos" property="avgpos" jdbcType="DOUBLE" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, pid, salesAmount, salesCount, skuCount, price, loginCount, uploadCount, daytime
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dbo.ods_base_sales
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <sql id="queryDetailSales_base">
+  select 
+  <if test="select!=null " >
+   	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+  </if> 
+  a.id,a.name, a.implementor,b.salesAmount,b.salesCount,b.skuCount,b.price,b.daytime from 
+  (
+   select  id,name, implementor from  ods_base_pharmacy t 
+   <trim prefix="WHERE" prefixOverrides="AND|OR">
+     <if test="id !=null and id!='' " >
+        and id=#{id}
+     </if>
+     <if test="iname !=null and iname!='' " >
+   		  and  implementor like '%'+ #{iname} +'%'
+     </if> 
+     <if test="name !=null and name!=''" >
+   		  and  name like '%'+ #{name} +'%'
+     </if>
+   </trim>
+   )a  left join
+   (
+     select t.pid,t.salesAmount,t.salesCount,t.skuCount,t.price,t.daytime from ods_base_sales  t where daytime between #{stime}  and #{etime}
+     )b on a.id=b.pid
+
+  </sql>
+  
+  <select id="queryDetailSalesCount" resultType="int"  parameterType="java.util.Map"   >
+  	 select COUNT(id)  as data from ( 
+  	  <include refid="queryDetailSales_base"></include>
+  	 )  rs  
+  </select>
+  
+  <select id="queryDetailSales" resultMap="BaseResultMap"  parameterType="java.util.Map"  >
+   select rs.* from (
+  	<include refid="queryDetailSales_base"/>  
+  	<![CDATA[  )  rs  where  indexs> #{start} and indexs <= #{end}  ]]>
+  </select>
+   
+  <sql id="queryDetailSalesByName_base">
+   <![CDATA[ select  ]]>
+   <if test="select!=null " >
+   	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+   </if> 
+   <![CDATA[ a.id ,a.name,a.implementor ,b.pid,b.salesAmount,b.salesCount,b.skuCount,b.price,b.daytime from  (
+   	select id ,name,implementor from   dbo.ods_base_pharmacy    where implementor in(   select name  from  oa_lead_user  where leadername=#{uname} )
+     ) a
+    left join (
+    select t.pid,t.salesAmount,t.salesCount,t.skuCount,t.price,t.daytime from ods_base_sales  t where daytime between  #{stime}  and #{etime}
+   )b on a.id=b.pid
+    ]]>
+    <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+     <if test="id !=null and id!='' " >
+   		  and  id =#{id}
+     </if> 
+     <if test="iname !=null and iname!='' " >
+   		  and  implementor like '%'+ #{iname} +'%'
+     </if> 
+     <if test="name !=null and name!=''" >
+   		  and  name like '%'+ #{name} +'%'
+     </if>  
+     </trim>
+  </sql>
+  
+  <select id="queryDetailSalesByNameCount" resultType="int"  parameterType="java.util.Map"   >
+      select COUNT(id)  as data from (  
+  	<include refid="queryDetailSalesByName_base"/>  
+  	  )  rs 
+  </select>
+   
+  <select id="queryDetailSalesByName"  resultMap="BaseResultMap"  parameterType="java.util.Map"   >
+  	 select  rs.*  from ( 
+  	<include refid="queryDetailSalesByName_base"/>  
+  	 )  rs 
+  	 <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+     <if test="id !=null and id!='' " >
+   		  and  id =#{id}
+     </if> 
+     <if test="iname !=null and iname!='' " >
+   		  and  implementor like '%'+ #{iname} +'%'
+     </if> 
+     <if test="name !=null and name!=''" >
+   		  and  name like '%'+ #{name} +'%'
+     </if> 
+  	  <![CDATA[  and rs.indexs> #{start} and rs.indexs <= #{end}   ]]>
+    </trim>
+  </select>   
+
+  
+  
+  	<sql id="querySumSales_bse">
+  	<![CDATA[ select  ]]>
+  	<if test="select!=null " > 
+  	ROW_NUMBER() over( ORDER  by id asc  ) as indexs ,
+  	</if>
+  	 <![CDATA[
+  	 id , name, implementor,salesAmount,salesCount,loginCount,uploadCount, 
+  	 cast ((  cast ( salesCount  as NUMERIC(18, 2)) / ( case  when uploadCount=0 then 1 else uploadCount  end  )) as NUMERIC(18, 2)) avgpos ,
+     cast( (tmp.salesAmount/ (case  when salesCount=0 then 1 else salesCount end))AS NUMERIC(18, 2)) as price  from  (
+     select  a.id,a.name, a.implementor,sum(b.salesAmount) as salesAmount, sum(b.salesCount) as salesCount, SUM(b.loginCount) as loginCount ,
+     SUM(b.uploadCount) as uploadCount  from 
+     ( select  id,name, implementor from  ods_base_pharmacy t 
+     ]]>
+      <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+     <if test="id !=null and id!='' " >
+   		  and  id =#{id}
+     </if> 
+     <if test="iname !=null and iname!='' " >
+   		  and  implementor like '%'+ #{iname} +'%'
+     </if> 
+     <if test="name !=null and name!=''" >
+   		  and  name like '%'+ #{name} +'%'
+     </if>  
+     </trim>
+     <![CDATA[ )a  left join ( select t.pid,t.salesAmount,t.salesCount,t.loginCount,t.uploadCount from ods_base_sales  t
+    	where daytime between #{stime} and #{etime} )b on a.id=b.pid
+      group by  a.id,a.name, a.implementor
+   	 ) tmp 
+   	 ]]>
+  	
+  	</sql>
+  
+    <select id="querySumSales"  resultMap="BaseResultMap"  parameterType="java.util.Map"   >
+    	 select  rs.*  from ( 
+  	<include refid="querySumSales_bse"/>  
+  		<![CDATA[  )  rs  where  indexs> #{start} and indexs <= #{end}  ]]>
+    </select>
+    
+    <select id="querySumSalesCount" resultType="int"  parameterType="java.util.Map"   >
+    select COUNT(id)  as data from ( 
+  	  <include refid="querySumSales_bse"></include>
+  	 )  rs
+    </select>
+
+
+	<sql id="querySumSalesByName_base">
+    <![CDATA[ select  ]]>
+  	<if test="select!=null " > 
+  	 ROW_NUMBER() over( ORDER  by id asc  ) as indexs ,
+  	</if>
+  	<![CDATA[ id , name, implementor,salesAmount,salesCount,loginCount,uploadCount, 
+  	 cast ((  cast ( salesCount  as NUMERIC(18, 2)) / ( case  when uploadCount=0 then 1 else uploadCount  end  )) as NUMERIC(18, 2)) avgpos ,
+     cast( (tmp.salesAmount/ (case  when salesCount=0 then 1 else salesCount end))AS NUMERIC(18, 2)) as price  from  (
+     select  a.id,a.name, a.implementor,sum(b.salesAmount) as salesAmount, sum(b.salesCount) as salesCount, SUM(b.loginCount) as loginCount ,SUM(b.uploadCount) as uploadCount  from  
+     (select id ,name,implementor from   dbo.ods_base_pharmacy    where implementor in( select name  from  oa_lead_user  where leadername=#{uname} ) ) a
+     left join ( select t.pid,t.salesAmount,t.salesCount,t.loginCount,t.uploadCount from ods_base_sales  t
+     where daytime between  #{stime} and #{etime} )b on a.id=b.pid
+     group by  a.id,a.name, a.implementor
+      ) tmp 
+     ]]>
+     <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+     <if test="id !=null and id!='' " >
+   		  and  id =#{id}
+     </if> 
+     <if test="iname !=null and iname!='' " >
+   		  and  implementor like '%'+ #{iname} +'%'
+     </if> 
+     <if test="name !=null and name!=''" >
+   		  and  name like '%'+ #{name} +'%'
+     </if>  
+     </trim>
+	
+	</sql>
+	
+	<select id="querySumSalesByName"  resultMap="BaseResultMap"  parameterType="java.util.Map"   >
+		 select  rs.*  from ( 
+  	<include refid="querySumSalesByName_base"/>  
+  		<![CDATA[  )  rs  where  indexs> #{start} and indexs <= #{end}  ]]>
+	</select>
+	
+	<select id="querySumSalesByNameCount" resultType="int"  parameterType="java.util.Map"   >
+	   select COUNT(id)  as data from ( 
+  	  <include refid="querySumSalesByName_base"></include>
+  	 )  rs
+	</select>  
+  
+  
+</mapper>

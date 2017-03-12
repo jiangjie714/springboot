@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.sys.mapper.OaLeaderMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.OaLeader" >
+  	<id column="id" property="id" jdbcType="INTEGER" />
+    <result column="deptid" property="deptid" jdbcType="NVARCHAR" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+    <result column="del_falg" property="delFalg" jdbcType="NCHAR" />
+  </resultMap>
+  
+  <sql id="Base_Column_List" >
+    id, deptid, name, del_falg
+  </sql>
+   <sql id="Base_Column_List1" >
+    deptid, name
+  </sql>
+  
+   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dbo.oa_leader
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from dbo.oa_leader
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.fufang.ds.bi.entity.OaLeader" >
+    insert into dbo.oa_leader (id, deptid, name, 
+      del_falg)
+    values (#{id,jdbcType=INTEGER}, #{deptid,jdbcType=NVARCHAR}, #{name,jdbcType=NVARCHAR}, 
+      #{delFalg,jdbcType=NCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.fufang.ds.bi.entity.OaLeader" >
+    insert into dbo.oa_leader
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="deptid != null" >
+        deptid,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="delFalg != null" >
+        del_falg,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="deptid != null" >
+        #{deptid,jdbcType=NVARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="delFalg != null" >
+        #{delFalg,jdbcType=NCHAR},
+      </if>
+    </trim>
+  </insert>
+  
+  
+  <insert id="addLeader"  parameterType="java.util.Map" >
+   insert into dbo.oa_leader
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="deptid != null" >
+        deptid,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+        del_falg,
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{deptid,jdbcType=NVARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+      '0',
+    </trim>
+  
+  </insert>
+  
+  
+  <select id="getLeader"  resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select  <include refid="Base_Column_List1" />  from dbo.oa_leader 
+    <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 	<if test="deptid != null  and deptid !='' ">
+  	 			<![CDATA[ and	deptid=#{deptid }  ]]>  
+  	 	</if>
+  	 	and del_falg='0'
+     </trim>
+  </select>
+  
+  <select id="getAllLeader"  resultMap="BaseResultMap" parameterType="java.util.Map" >
+    select  <include refid="Base_Column_List" />  from dbo.oa_leader 
+    <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 	<if test="deptid != null  and deptid !='' ">
+  	 		<![CDATA[ and	deptid=#{deptid }  ]]>  
+  	 	</if>
+  	 	<if test="name != null  and name !='' ">
+  	 		<![CDATA[ and	name=#{name }  ]]>  
+  	 	</if>
+  	 	and del_falg='0'
+     </trim>
+  </select>
+  
+  <update id="deleteLeader"  parameterType="java.util.Map" >
+  	update dbo.oa_leader  set del_falg='1' where  deptid=#{deptid }  and name =#{name}
+  </update>
+  
+  <update id="updateLeader " parameterType="java.util.Map"  >
+   update dbo.oa_leader 
+   <set >
+      <if test="name != null and name!='' " >
+        name = #{deptid,jdbcType=NVARCHAR},
+      </if>
+      <if test="deptid != null and deptid !='' " >
+        name = #{name,jdbcType=NVARCHAR},
+      </if>
+     </set>
+      where id=#{id }
+  </update>
+  
+  
+</mapper>

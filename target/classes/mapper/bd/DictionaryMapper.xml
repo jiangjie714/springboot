@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.bd.mapper.DictionaryMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.Dictionary" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="type" property="type" jdbcType="NVARCHAR" />
+    <result column="code" property="code" jdbcType="NVARCHAR" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, type, code, name
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dbo.oa_dictionary
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="findBDRole" resultMap="BaseResultMap"   parameterType="java.lang.String">
+  select 
+    <include refid="Base_Column_List" />
+    from dbo.oa_dictionary  where type='BD' and code=#{yhdh} 
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from dbo.oa_dictionary
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.fufang.ds.bi.entity.Dictionary" >
+    insert into dbo.oa_dictionary (id, type, code, 
+      name)
+    values (#{id,jdbcType=INTEGER}, #{type,jdbcType=NVARCHAR}, #{code,jdbcType=NVARCHAR}, 
+      #{name,jdbcType=NVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.fufang.ds.bi.entity.Dictionary" >
+    insert into dbo.oa_dictionary
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="type != null" >
+        type,
+      </if>
+      <if test="code != null" >
+        code,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="type != null" >
+        #{type,jdbcType=NVARCHAR},
+      </if>
+      <if test="code != null" >
+        #{code,jdbcType=NVARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.fufang.ds.bi.entity.Dictionary" >
+    update dbo.oa_dictionary
+    <set >
+      <if test="type != null" >
+        type = #{type,jdbcType=NVARCHAR},
+      </if>
+      <if test="code != null" >
+        code = #{code,jdbcType=NVARCHAR},
+      </if>
+      <if test="name != null" >
+        name = #{name,jdbcType=NVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.fufang.ds.bi.entity.Dictionary" >
+    update dbo.oa_dictionary
+    set type = #{type,jdbcType=NVARCHAR},
+      code = #{code,jdbcType=NVARCHAR},
+      name = #{name,jdbcType=NVARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+	
+</mapper>

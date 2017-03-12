@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.sys.mapper.OaUserMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.OaUser" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="yhdh" property="yhdh" jdbcType="VARCHAR" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="deptId" property="deptid" jdbcType="INTEGER" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="createday" property="createday" jdbcType="VARCHAR" />
+    <result column="loginday" property="loginday" jdbcType="TIMESTAMP" />
+    <result column="states" property="states" jdbcType="INTEGER" />
+    <result column="manager" property="manager" jdbcType="VARCHAR" />
+    <result column="job" property="job" jdbcType="VARCHAR" />
+  </resultMap> 
+  
+  <resultMap id="SelectMap" type="com.fufang.ds.bi.entity.Select" >
+    <id column="id" property="id" jdbcType="NVARCHAR" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+  </resultMap>
+  
+  <sql id="Base_Column_List" >
+    id, name, email, phone, deptId, yhdh, job,manager, password, createday, loginday, states
+  </sql>
+  
+  <sql id="Base_Column_List1" >
+  	<if test="select !=null ">
+    	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+   </if>
+   <![CDATA[  id, yhdh, name,  phone,   job, dbo.getDeptName(deptId)  as deptId ,manager, cast (createday  as Datetime) as  createday  ]]> 
+  </sql> 
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dbo.oa_user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  
+  
+  <delete id="deleteUserBakAll">
+   delete from  oa_user_bak
+  </delete>
+ 
+  <insert id="copyUserAll">
+   insert  into oa_user_bak ( yhdh, name,  email,  deptId ,job, manager,password,states) 
+   ( SELECT yhdh, name,  email,  deptId ,job, manager,password,states from oa_user t  where   t.yhdh not in(  select yhdh  from  oa_user_bak ))
+  	
+  </insert>
+  
+  <select id="getLeader"  resultMap="SelectMap" parameterType="java.lang.String" >
+  		  select  distinct  manager   as id, manager as  name from oa_user  where  deptId =#{deptid}
+  </select>
+ 
+  <select id="findUser" resultMap="BaseResultMap"  parameterType="java.util.Map">
+  	select  <include refid="Base_Column_List" /> from  dbo.oa_user
+  	 <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 <if test="password != null  and password !='' ">
+  	 	<![CDATA[ and	password=#{password }  ]]>  
+  	 </if>
+  	 <if test="yhdh != null  and yhdh !='' ">
+  	 	<![CDATA[ and	yhdh=#{yhdh }  ]]>  
+  	 </if>
+  	 </trim>
+  </select>
+  
+  <select id="findUserByYhdh" resultMap="BaseResultMap" parameterType="java.lang.String"  >
+  		select  
+  		<include refid="Base_Column_List" /> 
+  		from  dbo.oa_user  t  where t.yhdh=#{yhdh}  and t.states='0'
+  </select>
+  
+  <select id="findUserPassWordByYhdh" resultMap="BaseResultMap" parameterType="java.lang.String"  >
+  		select  password   from  dbo.oa_user where  yhdh=#{yhdh }
+  </select>
+  
+  <select id="getRoleByYhdh" resultMap="SelectMap" parameterType="java.lang.String"  >
+  	  select  cast (id as NCHAR(10)) as  id ,name  from oa_role  where  id in ( select role_id from  oa_role_user where  yhdh=#{yhdh})
+  </select>
+  
+  <select id="getRoleAll" resultMap="SelectMap" >
+     	select cast (id as NCHAR(10)) as id ,name from oa_role
+  </select>
+  
+  <select id="findAllUser" resultMap="BaseResultMap"  parameterType="java.util.Map">
+  	<![CDATA[ select  rs.* from (  select  ]]>  
+  	  <include refid="Base_Column_List1" /> from  dbo.oa_user
+  	 <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 <if test="yhdh != null  and yhdh !='' ">
+  	 	<![CDATA[ and	yhdh=#{yhdh }  ]]>  
+  	 </if>
+  	 <if test="name != null and  name !='' ">
+  	 	<![CDATA[ and	name like '%'+ #{name }+'%'   ]]>  
+  	 </if>
+  	 <if test="deptid != null and  deptid !='' ">
+  	 	<![CDATA[ and	deptid= #{deptid }   ]]>  
+  	 </if>
+  	       and states='0'
+  	 </trim>
+  	  <![CDATA[ ) rs  where   indexs> #{ start} and indexs <= #{end} ]]>  
+  </select>
+   <select id="findAllUserCount" resultType="int"  parameterType="java.util.Map" >
+  	<![CDATA[ select count(id) as data from (  select  ]]>  
+     <include refid="Base_Column_List1" /> from  dbo.oa_user
+  	 <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 <if test="yhdh != null  and yhdh !='' ">
+  	 	<![CDATA[ and	yhdh=#{yhdh }  ]]>  
+  	 </if>
+  	 <if test="name != null and  name !='' ">
+  	 	<![CDATA[ and	name like '%'+ #{name }+'%'   ]]>  
+  	 </if>
+  	 <if test="deptid != null and  deptid !='' ">
+  	 	<![CDATA[ and	deptid= #{deptid }   ]]>  
+  	 </if>
+  	    and states='0'
+  	 </trim>
+  	  <![CDATA[ ) rs ]]>  
+  </select>
+  
+  <select id="findAllUser2"   resultMap="BaseResultMap"  >
+  	select yhdh  from   dbo.oa_user
+  </select>
+  
+ 
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from dbo.oa_user
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  
+   <delete id="deleteUserAll" >
+    delete from dbo.oa_user  where yhdh!='admin'
+  </delete>
+  <select id="findBDManagerLevelList"   resultMap="BaseResultMap" >
+  
+   select name,yhdh, job,manager from oa_user where deptId in( 
+	select  name from oa_dept where deptid='02'  or parentid like '02%'
+	)  and  job!='BD' and states='0'
+
+  </select>
+  
+  <select id="findBDUserDown" resultMap="BaseResultMap" parameterType="java.lang.String"  >
+   select name ,manager from oa_user  where   manager=#{name,jdbcType=VARCHAR}
+  </select>
+  
+  <select id="findAllUserByMySelf" resultMap="BaseResultMap">
+		select name as manager ,name  from oa_user 
+  </select>
+  
+  <select id="findBDUserDownList" resultMap="BaseResultMap" parameterType="java.util.List" >
+   select name , manager  from  dbo.oa_user
+   where
+   <foreach collection="list" item="item" index="index" open="" close="" separator="OR">  
+   manager = #{item.name}  
+  </foreach>  
+  
+  </select>
+  
+  <insert id="addOaLogin" parameterType="java.util.List"  >
+   <foreach collection="list" item="item" index="index" separator=",">
+  if exists
+	(
+	select * from  oa_login where yhdh not in ( select yhdh from  oa_user where yhdh=#{item.yhdh,jdbcType=VARCHAR})
+	) 
+	begin  
+		 delete  from oa_login where yhdh =#{item.yhdh,jdbcType=VARCHAR}
+	end 
+	else  
+  	begin
+  		insert into dbo.oa_login ( yhdh,[password ] ) values ( #{item.yhdh},#{item.yhdh}+'1111')
+ 	end 
+  </foreach>
+  </insert>
+  
+  <insert id="insert" parameterType="com.fufang.ds.bi.entity.OaUser" >
+    insert into dbo.oa_user (id, name, email, 
+      phone, deptId, password, manager,
+      createday, loginday, states
+      )
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, 
+      #{phone,jdbcType=VARCHAR}, #{deptid,jdbcType=INTEGER}, #{password,jdbcType=VARCHAR},  #{manager,jdbcType=VARCHAR}
+      #{createday,jdbcType=TIMESTAMP}, #{loginday,jdbcType=TIMESTAMP}, #{states,jdbcType=INTEGER}
+      )
+  </insert>
+  
+  <insert id="addUserByBatch" parameterType="java.util.List" >
+        insert into dbo.oa_user (yhdh,name,job,deptid,manager,email,password,states)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.yhdh,jdbcType=VARCHAR}, 
+            #{item.name,jdbcType=VARCHAR},
+            #{item.job,jdbcType=VARCHAR},
+            #{item.deptid,jdbcType=VARCHAR},
+            #{item.manager,jdbcType=VARCHAR},
+            #{item.email,jdbcType=VARCHAR},
+            #{item.password,jdbcType=VARCHAR},
+            #{item.states,jdbcType=INTEGER}
+            )
+        </foreach>  
+  </insert>
+  
+  <insert id="insertSelective" parameterType="com.fufang.ds.bi.entity.OaUser" >
+    insert into dbo.oa_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="email != null" >
+        email,
+      </if>
+      <if test="phone != null" >
+        phone,
+      </if>
+      <if test="deptid != null" >
+        deptId,
+      </if>
+      <if test="password != null" >
+        password,
+      </if>
+      <if test="manager != null" >
+        manager,
+      </if>
+      
+      <if test="createday != null" >
+        createday,
+      </if>
+      <if test="loginday != null" >
+        loginday,
+      </if>
+      <if test="states != null" >
+        states,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null" >
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="deptid != null" >
+        #{deptid,jdbcType=INTEGER},
+      </if>
+      <if test="password != null" >
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="manager != null" >
+        #{manager,jdbcType=VARCHAR},
+      </if>
+      <if test="createday != null" >
+        #{createday,jdbcType=TIMESTAMP},
+      </if>
+      <if test="loginday != null" >
+        #{loginday,jdbcType=TIMESTAMP},
+      </if>
+      <if test="states != null" >
+        #{states,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  
+  <insert id="addUser" parameterType="java.util.Map" >
+  	  insert into dbo.oa_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+        password,
+        createday,
+        loginday,
+        states,
+      <if test="yhdh != null" >
+        yhdh,
+      </if>  
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="email != null" >
+        email,
+      </if>
+      <if test="phone != null" >
+        phone,
+      </if>
+      <if test="deptid != null" >
+        deptId,
+      </if>
+      <if test="job != null" >
+        job,
+      </if>
+       <if test="manager != null" >
+        manager,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      '111111',getDate(),getDate(),'0',
+      <if test="yhdh != null" >
+        #{yhdh,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null" >
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="deptid != null" >
+        #{deptid,jdbcType=INTEGER},
+      </if>
+      <if test="job != null" >
+        #{job,jdbcType=VARCHAR},
+      </if>
+      
+       <if test="manager != null" >
+        #{manager,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  
+  
+  <insert id="insertRoles"   parameterType="java.util.Map" >
+   insert into oa_role_user 
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+    	 <if test="yhdh != null" >
+            yhdh,
+         </if>
+         <if test="roles !=null">
+          roles,
+         </if>  
+    </trim>
+     <trim prefix="values (" suffix=")" suffixOverrides="," >
+     	<if test="yhdh != null" >
+           #{yhdh},
+         </if>
+		 <if test="roles != null ">
+		 	#{roles},
+		 </if>
+     </trim>
+   
+  
+  </insert>
+  
+  
+  <update id="deleteUserById"  parameterType="java.lang.Integer">
+   	update dbo.oa_user  set states='1' where id=#{id}
+  </update>
+  
+  <update id="updateAllUserDeptId">
+   update oa_user set deptId =b.deptid
+   from (select * from  oa_dept  t )b where oa_user.deptId=b.name
+  </update>
+  
+  <update id="updateAllUserPassword">
+   update oa_user set password= b.password  from 
+   ( select * from oa_user_bak )b  where oa_user.yhdh=b.yhdh
+  </update>
+  
+  <update id="updatUserPassWord" parameterType="java.util.Map">
+    update dbo.oa_user  set password=#{password }  where yhdh=#{yhdh}
+  </update>
+  
+  <update id="updateLoginUserDate" parameterType="java.lang.String" >
+   update dbo.oa_user set  loginday=GETDATE() where  yhdh = #{yhdh,jdbcType=VARCHAR}
+  </update>
+  
+  <update id="updateUser">
+   update dbo.oa_user
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null" >
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="deptid != null" >
+        deptId = #{deptid,jdbcType=INTEGER},
+      </if>
+      <if test="job != null" >
+        #{job,jdbcType=VARCHAR},
+      </if>
+      <if test="manager != null" >
+        manager = #{manager,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  
+  </update>
+  
+  <update id="updateByPrimaryKeySelective" parameterType="com.fufang.ds.bi.entity.OaUser" >
+    update dbo.oa_user
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null" >
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="deptid != null" >
+        deptId = #{deptid,jdbcType=INTEGER},
+      </if>
+      <if test="job != null" >
+        #{job,jdbcType=VARCHAR},
+      </if>
+      <if test="manager != null" >
+        manager = #{manager,jdbcType=INTEGER},
+      </if>
+      <if test="password != null" >
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="createday != null" >
+        createday = #{createday,jdbcType=TIMESTAMP},
+      </if>
+      <if test="loginday != null" >
+        loginday = #{loginday,jdbcType=TIMESTAMP},
+      </if>
+      <if test="states != null" >
+        states = #{states,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+ 
+ 
+  <update id="updateByPrimaryKey" parameterType="com.fufang.ds.bi.entity.OaUser" >
+    update dbo.oa_user
+    set name = #{name,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      phone = #{phone,jdbcType=VARCHAR},
+      deptId = #{deptid,jdbcType=VARCHAR},
+      manager = #{manager,jdbcType=VARCHAR},
+      job = #{job,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      createday = #{createday,jdbcType=TIMESTAMP},
+      loginday = #{loginday,jdbcType=TIMESTAMP},
+      states = #{states,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

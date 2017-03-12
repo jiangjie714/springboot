@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.bd.mapper.BasePharmacyMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.BasePharmacy" >
+    <result column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+    <result column="provinceId" property="provinceid" jdbcType="NVARCHAR" />
+    <result column="cityId" property="cityid" jdbcType="NVARCHAR" />
+    <result column="pcode" property="pcode" jdbcType="INTEGER" />
+    <result column="ccode" property="ccode" jdbcType="INTEGER" />
+    <result column="rcode" property="rcode" jdbcType="INTEGER" />
+    <result column="district" property="district" jdbcType="NVARCHAR" />
+    <result column="grade" property="grade" jdbcType="DOUBLE" />
+    <result column="registAddress" property="registaddress" jdbcType="NVARCHAR" />
+    <result column="createdate" property="createdate" jdbcType="VARCHAR" />
+    <result column="userDate" property="userdate" jdbcType="VARCHAR" />
+    <result column="implementor" property="implementor" jdbcType="NVARCHAR" />
+    <result column="remark" property="remark" jdbcType="NVARCHAR" />
+  </resultMap>
+   <sql id="Base_Column_List" >
+    id, name, provinceId,  cityId, pcode, ccode,  rcode, district,  grade, registAddress, 
+    convert( varchar(10),createdate ,23 ) createdate,
+    isnull(convert( varchar(10),userDate ,23 ),'') userDate ,
+    implementor, remark
+   </sql>
+ 
+  <sql id="findBasePharmacyAll_base" >
+   select
+   	<if test="select!=null " >
+   	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+   	</if> 
+    <include refid="Base_Column_List"  />  from dbo.ods_base_pharmacy
+  	 <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+      <if test="id != null  and id !=''">
+   		 <![CDATA[ and	id=#{id }  ]]>  
+   	  </if>
+   	  <if test="name != null  and name !=''">
+   		 <![CDATA[ and	name=#{name }  ]]>  
+   	  </if>
+   	  <if test="iname != null  and iname !=''">
+   		 <![CDATA[ and	implementor=#{iname }  ]]>  
+   	  </if>
+   	    <![CDATA[ and remark <>2  ]]>  
+  	</trim>
+  </sql>
+  
+  <select id="findBasePharmacyAll" resultMap="BaseResultMap"  parameterType="java.util.Map" >
+  	<![CDATA[ select rs.* from (  ]]>
+  	 <include refid="findBasePharmacyAll_base"  /> 
+  	<![CDATA[  )  rs where rs.indexs> #{ start} and rs.indexs <= #{end} ]]>
+  </select>
+  
+   <select id="findBasePharmacyAllCount" resultType="int"  parameterType="java.util.Map" >
+  	<![CDATA[ select count( rs.id ) as data  from (  ]]>
+  	 <include refid="findBasePharmacyAll_base"  /> 
+  	<![CDATA[  )  rs  ]]>
+  </select>
+  
+  
+   <sql id="findBasePharmacyAllByName_base" >
+    select  
+    <if test="select !=null ">
+   	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+   	</if>
+    <include refid="Base_Column_List"  />  from dbo.ods_base_pharmacy  
+     where implementor in( select name  from  oa_lead_user  where leadername=#{uname}  )
+  </sql>
+  
+   <select id="findBasePharmacyAllByName" resultMap="BaseResultMap"  parameterType="java.util.Map" >
+   select  * from (
+   <include refid="findBasePharmacyAllByName_base"  /> 
+    ) rs  
+    <trim prefix="WHERE" prefixOverrides="AND|OR">
+     <if test="iname !=null and iname!='' " >
+   		  and  implementor =#{iname}
+     </if> 
+     <if test="id !=null and id!='' " >
+   		  and  id =#{id}
+     </if> 
+     <if test="name !=null and name!='' " >
+   		  and  name =#{name}
+     </if> 
+     <![CDATA[  and rs.indexs> #{start} and rs.indexs <= #{end}   ]]>
+    </trim>
+  </select>
+  
+  <select id="findBasePharmacyAllByNameCount" resultType="int"  parameterType="java.util.Map" >
+   	<![CDATA[ select count( rs.id ) as data  from (  ]]>
+  	 <include refid="findBasePharmacyAllByName_base"  /> 
+  	<![CDATA[  )  rs  ]]>
+  </select>
+  
+
+  
+  
+</mapper>

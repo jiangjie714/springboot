@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.sys.mapper.OaDeptMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.OaDept" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+    <result column="deptid" property="deptid" jdbcType="NVARCHAR" />
+    <result column="parentid" property="parentid" jdbcType="NVARCHAR" />
+    <result column="del_falg" property="delFalg" jdbcType="NCHAR" />
+  </resultMap>
+   <resultMap id="SelectMap" type="com.fufang.ds.bi.entity.Select" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, name, deptid, parentid,del_falg
+  </sql>
+   <sql id="Base_Column_List1" >
+   <if test="select !=null ">
+    	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+   </if>
+   <![CDATA[ id, name, deptid, isnull(dbo.getDeptParentName( parentid),'-')  as  parentid ,del_falg ]]> 
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dbo.oa_dept
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <select id="checkDeptByDeptid" resultMap="BaseResultMap"  parameterType="java.lang.String" >
+    select  <include refid="Base_Column_List" />  from   dbo.oa_dept where deptid=#{deptid} 
+  </select>
+  
+  <select id="findAllByDeptid" resultMap="BaseResultMap"  parameterType="java.util.Map" >
+  	 select  name,deptid
+      from dbo.oa_dept
+   	<trim prefix="WHERE" prefixOverrides="AND|OR"> 
+      <if test="deptid != null  and deptid !=''  and  deptid !=1 ">
+   		 <![CDATA[ and	deptid=#{deptid }  ]]>  
+   	  </if>
+  	</trim>
+  </select>
+  
+  <select id="getBDDeptByDeptid" resultMap="BaseResultMap" parameterType="java.lang.String">
+	select name,deptid  from dbo.oa_dept  t  where  t.deptid like '%'+#{ deptid}+'%' or t.parentid like '%'+#{ deptid}+'%'
+  </select>
+  
+  <select id="getOwnerAllDept" resultMap="SelectMap" parameterType="java.lang.String"  >
+  	select  deptid as id , name   from dbo.oa_dept  where  deptid=#{deptid} or parentid=#{deptid} and del_falg='0'
+  </select>
+  
+  <select id="getSelfDept" resultMap="SelectMap"  parameterType="java.lang.String" >
+  	 select  deptid as  id, name  from dbo.oa_dept where  deptid=#{deptid } and del_falg='0'  
+  </select>
+  
+  <select id="getSelectDept"  resultMap="SelectMap"  parameterType="java.util.Map" >
+  	select deptid as id , name from dbo.oa_dept t where t.del_falg='0'  
+  </select>
+  
+  <select id="getSelectMasterDept"  resultMap="SelectMap" >
+  	select deptid as id , name from dbo.oa_dept t where t.del_falg='0' and t.parentid='0'
+  </select>
+  
+  <select id="getChildDept" resultMap="SelectMap" parameterType="java.util.Map" >
+  	select deptid as id , name from dbo.oa_dept t where t.parentid like ''+ #{parentid }+'%' and t.del_falg='0'  
+  </select>
+  
+  
+  <select id="queryDept" resultMap="BaseResultMap" parameterType="java.util.Map" >
+  	<![CDATA[ select  rs.* from (  select  ]]>  
+    <include refid="Base_Column_List1" />    from dbo.oa_dept
+    <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+      <if test="name != null  and name !='' ">
+   		 <![CDATA[ and	name=#{name }  ]]>  
+   	  </if>
+   	  <if test="deptid != null  and deptid !='' ">
+   		 <![CDATA[ and	deptid=#{deptid }  ]]>  
+   	  </if>
+   	  	and del_falg='0' 
+  	</trim>
+  	 <![CDATA[ ) rs  where   indexs> #{ start} and indexs <= #{end} ]]>  
+  </select>
+  
+  
+  <select id="queryDeptCount" resultType="int"  parameterType="java.util.Map" >
+  	<![CDATA[ select count(id) as data from (  select  ]]>  
+    <include refid="Base_Column_List1" />    from dbo.oa_dept
+    <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+      <if test="name != null  and name !='' ">
+   		 <![CDATA[ and	name=#{name }  ]]>  
+   	  </if>
+   	  <if test="deptid != null  and deptid !='' ">
+   		 <![CDATA[ and	deptid=#{deptid }  ]]>  
+   	  </if>
+   	  	and del_falg='0' 
+  	</trim>
+  	 <![CDATA[ ) rs  ]]>  
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from dbo.oa_dept
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+ 
+  <insert id="insert" parameterType="com.fufang.ds.bi.entity.OaDept" >
+    insert into dbo.oa_dept (id, name, deptid, 
+      parentid)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=NVARCHAR}, #{deptid,jdbcType=NVARCHAR}, 
+      #{parentid,jdbcType=INTEGER})
+  </insert>
+  
+  <insert id="addDept" parameterType="java.util.Map" >
+  	 insert into dbo.oa_dept
+  	   <trim prefix="(" suffix=")" suffixOverrides="," >
+     
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="deptid != null" >
+        deptid,
+      </if>
+      <if test="parentid != null" >
+        parentid,
+      </if>
+        del_falg
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="deptid != null" >
+        #{deptid,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        #{parentid,jdbcType=INTEGER},
+      </if>
+      	'0'
+    </trim>
+  
+  </insert>
+  
+  <insert id="insertSelective" parameterType="com.fufang.ds.bi.entity.OaDept" >
+    insert into dbo.oa_dept
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="deptid != null" >
+        deptid,
+      </if>
+      <if test="parentid != null" >
+        parentid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="deptid != null" >
+        #{deptid,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        #{parentid,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+ 
+  <update id="updateByPrimaryKeySelective" parameterType="com.fufang.ds.bi.entity.OaDept" >
+    update dbo.oa_dept
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="deptid != null" >
+        deptid = #{deptid,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        parentid = #{parentid,jdbcType=NVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.fufang.ds.bi.entity.OaDept" >
+    update dbo.oa_dept
+    set name = #{name,jdbcType=NVARCHAR},
+      deptid = #{deptid,jdbcType=NVARCHAR},
+      parentid = #{parentid,jdbcType=NVARCHAR}
+    where id = #{id,jdbcType=NVARCHAR}
+  </update>
+
+  <update id="updateDept" parameterType="java.util.Map" >
+    update dbo.oa_dept
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="deptid != null" >
+        deptid = #{deptid,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        parentid = #{parentid,jdbcType=NVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <update id="deleteDept" parameterType="java.lang.Integer"  >
+  update dbo.oa_dept set del_falg='1' where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.sys.mapper.OaRoleMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.OaRole" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+    <result column="createdate" property="createdate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="remark" property="remark" jdbcType="NCHAR" />
+    <result column="del_flag" property="delFlag" jdbcType="NCHAR" />
+  </resultMap>
+  
+  <resultMap id="MenuMap" type="com.fufang.ds.bi.entity.OaMenu" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+    <result column="url" property="url" jdbcType="NVARCHAR" />
+    <result column="parentid" property="parentid" jdbcType="NVARCHAR" />
+    <result column="sort" property="sort" jdbcType="NVARCHAR" />
+    <result column="show" property="show" jdbcType="VARCHAR" />
+    <result column="remark" property="remark" jdbcType="NVARCHAR" />
+    <result column="createdate" property="createdate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="del_flag" property="delFlag" jdbcType="NVARCHAR" />
+  </resultMap>
+  <resultMap id="SelectMap" type="com.fufang.ds.bi.entity.Select" >
+    <id column="id" property="id" jdbcType="NVARCHAR" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, name, createdate, update_date, remark, del_flag
+  </sql>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dbo.oa_role
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <select id="findRoleMenu" resultMap="SelectMap" parameterType="java.util.Map"  >
+    select distinct   role_id as id , menu_id   as name from  oa_role_menu 
+    <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+    <if test="role_id !=null ">
+      <![CDATA[ and	 role_id=#{role_id } ]]>  
+	</if>
+	</trim>
+  </select>
+  
+  <select id="getMenuByMenuId" resultMap="MenuMap" parameterType="java.util.List" >
+  	select id,name,parentid from  oa_menu 
+     <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+    <foreach collection="list" item="item" index="index" open="" close="" separator="OR">  
+      id = #{item.name}  
+    </foreach> 
+       and del_flag='0'
+     </trim>
+  </select>
+  
+  <select id="findRoleById" resultMap="BaseResultMap" parameterType="java.util.Map" >
+   select id ,name from dbo.oa_role
+   <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+    <if test="id !=null ">
+      <![CDATA[ and	 id=#{id } ]]>  
+	</if>
+	 and del_flag='0'
+	</trim>
+  </select>
+  
+  <select id="findRole" resultMap="BaseResultMap"  parameterType="java.util.Map" >
+   <![CDATA[ select rs.* from (   
+     select ]]>
+     <if test="select !=null ">
+    	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+     </if>
+      id ,name  from dbo.oa_role 
+     <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 	<if test="name !=null and name!='' ">
+  	 		<![CDATA[ and	name  like '%'+ #{name }+'%' ]]>  
+  	 	</if>
+  	 	<if test="id !=null and id !='' ">
+  	 		<![CDATA[ and id= #{id } ]]>  
+  	 	</if>
+  	 	and del_flag='0'
+  	 </trim>
+  	 <![CDATA[  ) rs   where indexs> #{ start} and indexs <= #{end}      ]]>  
+  </select>
+  
+  <select id="findRoleCount" resultType="int"  parameterType="java.util.Map"  >
+   <![CDATA[ select count(id) as data from (
+  	select id ,name  from dbo.oa_role  ]]>
+     <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 	<if test="name !=null and name!='' ">
+  	 		<![CDATA[ and	name  like '%'+ #{name }+'%' ]]>  
+  	 	</if>
+  	 	<if test="id !=null and id !='' ">
+  	 		<![CDATA[ and id= #{id } ]]>  
+  	 	</if>
+  	 	and del_flag='0'
+  	 </trim>
+  	 <![CDATA[  )  rs  ]]>  
+  </select>
+  
+  <select id="findRoleByName"  resultMap="BaseResultMap" >
+  	select max(id) as id , name from dbo.oa_role t 
+  	 <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 	<if test="name !=null and name!='' ">
+  	 		<![CDATA[ and	name=#{name } and del_flag='0' ]]>  
+  	 	</if>
+  	 </trim>
+  	 group by name
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from dbo.oa_role
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.fufang.ds.bi.entity.OaRole" >
+    insert into dbo.oa_role (id, name, createdate, 
+      update_date, remark, del_flag
+      )
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=NVARCHAR}, #{createdate,jdbcType=TIMESTAMP}, 
+      #{updateDate,jdbcType=TIMESTAMP}, #{remark,jdbcType=NCHAR}, #{delFlag,jdbcType=NCHAR}
+      )
+  </insert>
+  
+  <insert id="addRole"  parameterType="java.util.Map" >
+  
+  	insert into dbo.oa_role
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      createdate, update_date,remark,del_flag,
+      <if test="name != null" >
+        name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+     getDate(),getDate(),'1','0',
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+    </trim>
+  
+  </insert>
+ 
+  <insert id="addRoleMenuBatch" parameterType="java.util.List" >
+  insert into oa_role_menu (role_id,menu_id)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.name})
+        </foreach>
+  </insert>
+  <insert id="addRoleMenu" parameterType="java.util.Map" >
+  	insert into oa_role_menu 
+  	<trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="role_id != null" >
+        role_id,
+      </if>
+      <if test="menu_id != null" >
+        menu_id,
+      </if>
+      </trim>
+      <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="role_id != null" >
+        #{role_id },
+      </if>
+      <if test="menu_id != null" >
+        #{menu_id },
+      </if>
+      </trim>
+  </insert>
+  
+ 
+  <insert id="insertSelective" parameterType="com.fufang.ds.bi.entity.OaRole" >
+    insert into dbo.oa_role
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="createdate != null" >
+        createdate,
+      </if>
+      <if test="updateDate != null" >
+        update_date,
+      </if>
+      <if test="remark != null" >
+        remark,
+      </if>
+      <if test="delFlag != null" >
+        del_flag,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="createdate != null" >
+        #{createdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateDate != null" >
+        #{updateDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=NCHAR},
+      </if>
+      <if test="delFlag != null" >
+        #{delFlag,jdbcType=NCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.fufang.ds.bi.entity.OaRole" >
+    update dbo.oa_role
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="createdate != null" >
+        createdate = #{createdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateDate != null" >
+        update_date = #{updateDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null" >
+        remark = #{remark,jdbcType=NCHAR},
+      </if>
+      <if test="delFlag != null" >
+        del_flag = #{delFlag,jdbcType=NCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.fufang.ds.bi.entity.OaRole" >
+    update dbo.oa_role
+    set name = #{name,jdbcType=NVARCHAR},
+      createdate = #{createdate,jdbcType=TIMESTAMP},
+      update_date = #{updateDate,jdbcType=TIMESTAMP},
+      remark = #{remark,jdbcType=NCHAR},
+      del_flag = #{delFlag,jdbcType=NCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <update id="deleteRole" parameterType="java.util.Map"  >
+  update dbo.oa_role set  del_flag ='1' where id=#{id,jdbcType=INTEGER }
+  </update>
+</mapper>

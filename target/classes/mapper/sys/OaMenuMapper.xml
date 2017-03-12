@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.fufang.ds.bi.sys.mapper.OaMenuMapper" >
+  <resultMap id="BaseResultMap" type="com.fufang.ds.bi.entity.OaMenu" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+    <result column="url" property="url" jdbcType="NVARCHAR" />
+    <result column="parentid" property="parentid" jdbcType="NVARCHAR" />
+    <result column="sort" property="sort" jdbcType="NVARCHAR" />
+    <result column="show" property="show" jdbcType="VARCHAR" />
+    <result column="remark" property="remark" jdbcType="NVARCHAR" />
+    <result column="createdate" property="createdate" jdbcType="TIMESTAMP" />
+    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
+    <result column="del_flag" property="delFlag" jdbcType="NVARCHAR" />
+  </resultMap>
+  <resultMap id="SelectMap" type="com.fufang.ds.bi.entity.Select" >
+    <id column="id" property="id" jdbcType="NVARCHAR" />
+    <result column="name" property="name" jdbcType="NVARCHAR" />
+  </resultMap>
+  
+  <sql id="getAllMenu_base" >
+  	id ,name ,parentid
+  </sql>
+  
+  <sql id="Base_Column_List" >
+    id, name, url, parentid, sort, show, remark, createdate, update_date, del_flag
+  </sql>
+  
+  <select id="getAllMenu" resultMap="BaseResultMap">
+ 	 select  <include refid="getAllMenu_base" />  from dbo.oa_menu  where show='1' and del_flag='0'
+  </select>
+  
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from dbo.oa_menu
+    where id = #{id,jdbcType=INTEGER}  and del_flag='0' and show='1'
+  </select>
+  <select id="findAllMenuByUserYhdh" resultMap="BaseResultMap" parameterType="java.lang.String"  >
+   select
+    	 <include refid="Base_Column_List" />  
+  	from dbo.oa_menu t where t.id in(
+		select distinct t.menu_id from dbo.oa_role_menu t where t.role_id in 
+  			(select role_id from  oa_role_user t where t.yhdh= #{yhdh}   )
+  	)	and t.del_flag=0 and t.show='1' order by  t.id ,t.parentid,sort asc 
+  </select>
+	
+  <sql id="findAllMenu_base">
+    <if test="select !=null ">
+    	 ROW_NUMBER() over( ORDER  by ${sidx} ${sord}  ) as indexs ,
+    </if>
+   <![CDATA[ id,name, isnull (dbo.getMenuParentName(parentid),'') as parentid, case when show='1' then '是' else '否' end  as show ]]>  
+  </sql>   
+  
+  <select id="findAllMenu" resultMap="BaseResultMap"  parameterType="java.util.Map">
+   		<![CDATA[select rs.* from( select  ]]>  
+   		<include  refid="findAllMenu_base" />
+   		 from oa_menu 
+   	<trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 	<if test="id != null  and id !='' ">
+  	 	<![CDATA[ and	id=#{id } ]]>  
+  	 	</if>
+  	 	<if test="name != null  and name !='' ">
+  	 	<![CDATA[ and name  like '%' +  #{name } + '%'  ]]>  
+  	 	</if>
+  	 	<![CDATA[ and del_flag='0'  and show='1'   ]]>  
+  	 </trim>
+  	<![CDATA[ ) rs   where indexs> #{ start} and indexs <= #{end}  ]]>  
+  	 
+   </select>
+   
+   <select id="findAllMenuCount" resultType="int"  parameterType="java.util.Map">
+    <![CDATA[ select count( rs.id ) as data  from (  ]]>
+    select <include  refid="findAllMenu_base" />  from oa_menu 
+   	<trim prefix="WHERE" prefixOverrides="AND|OR"> 
+  	 	<if test="id != null  and id !='' ">
+  	 	<![CDATA[ and	id=#{id } ]]>  
+  	 	</if>
+  	 	<if test="name != null  and name !='' ">
+  	 	<![CDATA[ and name  like '%' +  #{name } + '%'  ]]>  
+  	 	</if>
+  	 	<![CDATA[ and del_flag='0'  and show='1' ]]>  
+  	 </trim>
+    <![CDATA[  )  rs  ]]>
+    
+   </select>
+   
+   
+   <select id="findMasterMenu"  resultMap="SelectMap" >
+    select   cast (id as NCHAR(10)) as  id,name  from dbo.oa_menu t where t.parentid='0' and del_flag='0' and show='1'
+   </select>
+   
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from dbo.oa_menu
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.fufang.ds.bi.entity.OaMenu" >
+    insert into dbo.oa_menu (id, name, url, 
+      parentid, sort, show, 
+      remark, createdate, update_date, 
+      del_flag)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=NVARCHAR}, #{url,jdbcType=NVARCHAR}, 
+      #{parentid,jdbcType=NVARCHAR}, #{sort,jdbcType=NVARCHAR}, #{show,jdbcType=NCHAR}, 
+      #{remark,jdbcType=NCHAR}, #{createdate,jdbcType=TIMESTAMP}, #{updateDate,jdbcType=TIMESTAMP}, 
+      #{delFlag,jdbcType=NCHAR})
+  </insert>
+  
+  
+  <insert id="insertSelective" parameterType="com.fufang.ds.bi.entity.OaMenu" >
+    insert into dbo.oa_menu
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="url != null" >
+        url,
+      </if>
+      <if test="parentid != null" >
+        parentid,
+      </if>
+      <if test="sort != null" >
+        sort,
+      </if>
+      <if test="show != null" >
+        show,
+      </if>
+      <if test="remark != null" >
+        remark,
+      </if>
+      <if test="createdate != null" >
+        createdate,
+      </if>
+      <if test="updateDate != null" >
+        update_date,
+      </if>
+      <if test="delFlag != null" >
+        del_flag,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="url != null" >
+        #{url,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        #{parentid,jdbcType=NVARCHAR},
+      </if>
+      <if test="sort != null" >
+        #{sort,jdbcType=NVARCHAR},
+      </if>
+      <if test="show != null" >
+        #{show,jdbcType=NCHAR},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=NCHAR},
+      </if>
+      <if test="createdate != null" >
+        #{createdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateDate != null" >
+        #{updateDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="delFlag != null" >
+        #{delFlag,jdbcType=NCHAR},
+      </if>
+    </trim>
+  </insert>
+  
+  <insert id="addmenu" parameterType="java.util.Map">
+  	insert into dbo.oa_menu
+  	 <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="url != null" >
+        url,
+      </if>
+      <if test="parentid != null" >
+        parentid,
+      </if>
+      <if test="sort != null" >
+        sort,
+      </if>
+      <if test="show != null" >
+        show,
+      </if>
+        remark,
+        createdate,
+        update_date,
+        del_flag,
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="url != null" >
+        #{url,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        #{parentid,jdbcType=NVARCHAR},
+      </if>
+      <if test="sort != null" >
+        #{sort,jdbcType=NVARCHAR},
+      </if>
+      <if test="show != null" >
+        #{show,jdbcType=NVARCHAR},
+      </if>
+       '1',getDate(),getDate(),0
+      
+    </trim>
+    
+  </insert>
+  
+  <update id="updateById" parameterType="java.util.Map" >
+   	update dbo.oa_menu
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="url != null" >
+        url = #{url,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        parentid = #{parentid,jdbcType=NVARCHAR},
+      </if>
+      <if test="sort != null" >
+        sort = #{sort,jdbcType=NVARCHAR},
+      </if>
+      <if test="show != null" >
+        show = #{show,jdbcType=NVARCHAR},
+      </if>
+     
+       update_date = getDate()
+    </set>
+    	where id = #{id,jdbcType=INTEGER}
+   </update>
+  
+  
+  <update id="deleteById" parameterType="java.lang.Integer" >
+   	update dbo.oa_menu
+    <set >
+       del_flag ='1',
+       update_date = getDate()
+    </set>
+    	where id = #{id,jdbcType=INTEGER}
+   </update>
+  
+  <update id="updateByPrimaryKeySelective" parameterType="com.fufang.ds.bi.entity.OaMenu" >
+    update dbo.oa_menu
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=NVARCHAR},
+      </if>
+      <if test="url != null" >
+        url = #{url,jdbcType=NVARCHAR},
+      </if>
+      <if test="parentid != null" >
+        parentid = #{parentid,jdbcType=NVARCHAR},
+      </if>
+      <if test="sort != null" >
+        sort = #{sort,jdbcType=NVARCHAR},
+      </if>
+      <if test="show != null" >
+        show = #{show,jdbcType=NVARCHAR},
+      </if>
+      <if test="remark != null" >
+        remark = #{remark,jdbcType=NVARCHAR},
+      </if>
+      <if test="createdate != null" >
+        createdate = #{createdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateDate != null" >
+        update_date = #{updateDate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="delFlag != null" >
+        del_flag = #{delFlag,jdbcType=NCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <update id="updateByPrimaryKey" parameterType="com.fufang.ds.bi.entity.OaMenu" >
+    update dbo.oa_menu
+    set name = #{name,jdbcType=NVARCHAR},
+      url = #{url,jdbcType=NVARCHAR},
+      parentid = #{parentid,jdbcType=NVARCHAR},
+      sort = #{sort,jdbcType=NVARCHAR},
+      show = #{show,jdbcType=NVARCHAR},
+      remark = #{remark,jdbcType=NVARCHAR},
+      createdate = #{createdate,jdbcType=TIMESTAMP},
+      update_date = #{updateDate,jdbcType=TIMESTAMP},
+      del_flag = #{delFlag,jdbcType=NCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
